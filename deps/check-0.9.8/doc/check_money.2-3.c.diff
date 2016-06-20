@@ -1,5 +1,5 @@
---- tests/check_money.2.c	2009-09-23 03:44:00.000000000 -0700
-+++ tests/check_money.3.c	2009-09-23 03:44:00.000000000 -0700
+--- tests/check_money.2.c	2016-06-20 04:33:18.911929000 +0000
++++ tests/check_money.3.c	2016-06-20 04:33:19.878072800 +0000
 @@ -1,3 +1,4 @@
 +#include <stdlib.h>
  #include <check.h>

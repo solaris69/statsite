@@ -1,5 +1,5 @@
---- tests/check_money.6.c	2009-09-23 03:44:00.000000000 -0700
-+++ tests/check_money.7.c	2009-09-23 03:44:00.000000000 -0700
+--- tests/check_money.6.c	2016-06-20 04:33:20.790104600 +0000
++++ tests/check_money.7.c	2016-06-20 04:33:21.671272800 +0000
 @@ -2,15 +2,26 @@
  #include <check.h>
  #include "../src/money.h"
