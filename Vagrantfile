@@ -46,6 +46,44 @@ ldconfig
 
 CODE
 
+$script_yum_rpm = <<CODE
+
+echo
+echo Provisioning started...
+echo
+
+sudo yum update
+sudo yum -y install build-essential scons python-setuptools lsof git automake rpm-build rpmdevtools check-devel
+sudo easy_install pip
+sudo pip install pytest
+
+cd /vagrant/deps/check-0.9.8/
+./configure
+make
+make install
+ldconfig
+
+cd /vagrant
+./bootstrap.sh
+./configure
+make
+
+echo 
+echo Prepare for rpm build
+echo
+cd
+rpmdev-setuptree
+mkdir statsite-0.7.1
+mkdir statsite-0.7.1/sinks
+cp /vagrant/src/statsite statsite-0.7.1
+cp /vagrant/{LICENSE,CHANGELOG.md,README.md} statsite-0.7.1
+cp /vagrant/rpm/statsite.conf.example statsite-0.7.1
+cp /vagrant/sinks/* statsite-0.7.1/sinks
+tar -zcvf rpmbuild/SOURCES/statsite-0.7.1.tar.gz statsite-0.7.1/
+cp /vagrant/rpm/statsite.spec rpmbuild/SPECS
+rpmbuild -v -bb rpmbuild/SPECS/statsite.spec
+CODE
+
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
@@ -79,6 +117,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
      - pytest
 
      To build: use make, to test: make test.
+	 
+	 RPM file in /home/vagrant/rpmbuild/RPMS/x86_64/statsite-0.7.1*.rpm
 
 
 MSG

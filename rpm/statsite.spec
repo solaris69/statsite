@@ -2,7 +2,7 @@
 
 Name:		statsite
 Version:	0.7.1
-Release:	1%{?dist}
+Release:	10%{?dist}
 Summary:	A C implementation of statsd.
 Group:		Applications
 License:	See the LICENSE file.
@@ -13,47 +13,46 @@ BuildRequires:	scons check-devel %{?el7:systemd} %{?fedora:systemd}
 AutoReqProv:	No
 Requires(pre):  shadow-utils
 
+%define compass_mon_app /compass/monitor/app
+%define compass_mon_cfg /compass/monitor/cfg
+%define compass_mon_log /compass/monitor/log
+
 %description
 
 Statsite is a metrics aggregation server. Statsite is based heavily on Etsy\'s StatsD
 https://github.com/etsy/statsd, and is wire compatible.
 
-%pre
-getent group %{name} >/dev/null || groupadd -r %{name}
-getent passwd  %{name}  >/dev/null || \
-    useradd -r -g  %{name} -d /var/lib/%{name} -s /sbin/nologin \
-    -c "Statsite user" %{name} 
-exit 0
-
 %prep
 %setup
 
 %build
+cd /vagrant
 make %{?_smp_mflags}
 
 %install
-mkdir -vp $RPM_BUILD_ROOT/usr/sbin
+mkdir -vp $RPM_BUILD_ROOT/%{compass_mon_app}/statsite
+mkdir -vp $RPM_BUILD_ROOT/%{compass_mon_cfg}/statsite
+mkdir -vp $RPM_BUILD_ROOT/%{compass_mon_app}/statsite/sinks
+mkdir -vp $RPM_BUILD_ROOT/%{compass_mon_app}/statsite/share
+mkdir -vp $RPM_BUILD_ROOT/%{compass_mon_log}/statsite
 mkdir -vp $RPM_BUILD_ROOT/etc/init.d
-mkdir -vp $RPM_BUILD_ROOT/etc/%{name}
-mkdir -vp $RPM_BUILD_ROOT/etc/tmpfiles.d
-mkdir -vp $RPM_BUILD_ROOT/usr/libexec/%{name}
 mkdir -vp $RPM_BUILD_ROOT/var/run/%{name}
-mkdir -vp $RPM_BUILD_ROOT/var/lib/%{name}
 
 %if 0%{?fedora}%{?el7}
 mkdir -vp $RPM_BUILD_ROOT/%{_unitdir}
 install -m 644 rpm/statsite.service $RPM_BUILD_ROOT/%{_unitdir}
 install -m 644 rpm/statsite.tmpfiles.conf $RPM_BUILD_ROOT/etc/tmpfiles.d/statsite.conf
 %else
-install -m 755 rpm/statsite.initscript $RPM_BUILD_ROOT/etc/init.d/statsite
+install -m 755 /vagrant/rpm/statsite.initscript $RPM_BUILD_ROOT/etc/init.d/statsite
 %endif
 
-install -m 755 src/statsite $RPM_BUILD_ROOT/usr/sbin
-install -m 644 rpm/statsite.conf.example $RPM_BUILD_ROOT/etc/%{name}/statsite.conf
-cp -a sinks $RPM_BUILD_ROOT/usr/libexec/%{name}
+install -m 755 /vagrant/src/statsite $RPM_BUILD_ROOT/%{compass_mon_app}/statsite/statsite
+install -m 644 /vagrant/rpm/statsite.conf.example $RPM_BUILD_ROOT/%{compass_mon_cfg}/statsite/statsite.conf
+cp -a /vagrant/sinks $RPM_BUILD_ROOT/%{compass_mon_app}/statsite
+cp -a /vagrant/{LICENSE,CHANGELOG.md,README.md} $RPM_BUILD_ROOT/%{compass_mon_app}/statsite/share
+cp -a /vagrant/rpm/statsite.conf.example $RPM_BUILD_ROOT/%{compass_mon_app}/statsite/share
 
 %clean
-make clean
 [ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
 
 %post
@@ -96,12 +95,12 @@ exit 0
 
 %files
 %defattr(-,root,root,-)
-%doc LICENSE
-%doc CHANGELOG.md
-%doc README.md
-%doc rpm/statsite.conf.example
-%config /etc/%{name}/statsite.conf
-%attr(755, root, root) /usr/sbin/statsite
+%doc %{compass_mon_app}/statsite/share/LICENSE
+%doc %{compass_mon_app}/statsite/share/CHANGELOG.md
+%doc %{compass_mon_app}/statsite/share/README.md
+%doc %{compass_mon_app}/statsite/share/statsite.conf.example
+%config %{compass_mon_cfg}/statsite/statsite.conf
+%attr(755, root, root) %{compass_mon_app}/statsite/statsite
 %if 0%{?fedora}%{?el7}
 %attr(644, root, root) %{_unitdir}/statsite.service
 %dir /etc/tmpfiles.d
@@ -109,21 +108,24 @@ exit 0
 %else
 %attr(755, root, root) /etc/init.d/statsite
 %endif
-%dir /usr/libexec/statsite
-%dir /usr/libexec/statsite/sinks
-%attr(755, statsite, statsite) /var/run/statsite
-%attr(755, statsite, statsite) /var/lib/statsite
-%attr(755, root, root) /usr/libexec/statsite/sinks/__init__.py
-%attr(755, root, root) /usr/libexec/statsite/sinks/binary_sink.py
-%attr(755, root, root) /usr/libexec/statsite/sinks/librato.py
-%attr(755, root, root) /usr/libexec/statsite/sinks/statsite_json_sink.rb
-%attr(755, root, root) /usr/libexec/statsite/sinks/gmetric.py
-%attr(755, root, root) /usr/libexec/statsite/sinks/influxdb.py
-%attr(755, root, root) /usr/libexec/statsite/sinks/graphite.py
-%attr(755, root, root) /usr/libexec/statsite/sinks/cloudwatch.sh
-%attr(755, root, root) /usr/libexec/statsite/sinks/opentsdb.js
+%dir %{compass_mon_app}/statsite
+%dir %{compass_mon_app}/statsite/sinks
+%attr(755, statsite, statsite) %{compass_mon_app}/statsite/statsite
+%attr(755, root, root) %{compass_mon_app}/statsite/sinks/__init__.py
+%attr(755, root, root) %{compass_mon_app}/statsite/sinks/binary_sink.py
+%attr(755, root, root) %{compass_mon_app}/statsite/sinks/librato.py
+%attr(755, root, root) %{compass_mon_app}/statsite/sinks/statsite_json_sink.rb
+%attr(755, root, root) %{compass_mon_app}/statsite/sinks/gmetric.py
+%attr(755, root, root) %{compass_mon_app}/statsite/sinks/influxdb.py
+%attr(755, root, root) %{compass_mon_app}/statsite/sinks/graphite.py
+%attr(755, root, root) %{compass_mon_app}/statsite/sinks/cloudwatch.sh
+%attr(755, root, root) %{compass_mon_app}/statsite/sinks/opentsdb.js
 
 %changelog
+* Mon Jun 20 2016 Verachan Man-in <vmanin@outlook.com> - 0.7.1-10
+- Remove a statsite user and group. I use compass instead.
+- Move installed location to /compass/monitor/app and configuration location to /compass/monitor/cfg
+
 * Tue May 12 2015 Yann Ramin <yann@twitter.com> - 0.7.1-1
 - Add a statsite user and group
 - Add systemd support
