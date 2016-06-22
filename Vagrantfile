@@ -68,9 +68,9 @@ cd /vagrant
 ./configure
 make
 
-echo 
+echo =====================================================
 echo Prepare for rpm build
-echo
+echo =====================================================
 cd
 rpmdev-setuptree
 mkdir statsite-0.7.1
@@ -82,6 +82,11 @@ cp /vagrant/sinks/* statsite-0.7.1/sinks
 tar -zcvf rpmbuild/SOURCES/statsite-0.7.1.tar.gz statsite-0.7.1/
 cp /vagrant/rpm/statsite.spec rpmbuild/SPECS
 rpmbuild -v -bb rpmbuild/SPECS/statsite.spec
+if [ ! -f /home/vagrant/rpmbuild/RPMS/x86_64/*.rpm ]; then
+    echo "Build Fail.....File not found!"
+else
+	mv /home/vagrant/rpmbuild/RPMS/x86_64/*.rpm /vagrant/rpm
+fi
 CODE
 
 
@@ -100,7 +105,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.synced_folder ".", "/vagrant", type: "nfs"
 
   # Provision using the shell to install fog
-  config.vm.provision :shell, :inline => $script_yum
+  config.vm.provision :shell, :inline => $script_yum_rpm
 
 
   config.vm.post_up_message = <<MSG
